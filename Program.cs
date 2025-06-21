@@ -1,5 +1,16 @@
+using inventory8.DatabaseContext;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// Agrega el contexto de base de datos
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<InventoryContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// Agrega servicios de API
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 // Add services to the container.
 
 builder.Services.AddControllers();
