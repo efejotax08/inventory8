@@ -1,0 +1,6 @@
+@inventory8_HostAddress = http://localhost:5056
+
+GET {{inventory8_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
