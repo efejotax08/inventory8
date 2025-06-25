@@ -1,7 +1,18 @@
 using inventory8.DatabaseContext;
+using inventory8.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Configura la variable de entorno con la ruta del archivo JSON
+var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "serviceAccount.json");
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
+
+// Agrega servicios
+builder.Services.AddSingleton<GoogleCloudStorageService>();
+builder.Services.AddControllersWithViews();
+
 
 // Agrega el contexto de base de datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -33,12 +44,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-
+app.UseStaticFiles();
+app.UseRouting();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapGet("/", () => "La API está corriendo correctamente en Azure");
+app.MapGet("/", () => "Bienvenido !");
 
 app.MapControllers();
 

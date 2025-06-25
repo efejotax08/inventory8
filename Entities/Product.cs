@@ -1,7 +1,10 @@
 ﻿
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace inventory8.Entities
 {
+    [Table("products")]
     public class Product
     {
         public int Id { get; set; }
@@ -12,7 +15,7 @@ namespace inventory8.Entities
         public int StockQuantity { get; set; }
         public int LowStockThreshold { get; set; }
         public decimal AcquisitionPrice { get; set; }
-        public string PhotoUrl { get; set; }
+        public string? PhotoUrl { get; set; }
         public bool SubscribeToInventory { get; set; }
         public string PackagingUnit { get; set; }
         public string Stats { get; set; }
