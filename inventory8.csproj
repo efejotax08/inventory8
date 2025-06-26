@@ -20,6 +20,9 @@
     <Content Update="Credentials\serviceAccount.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="Credentials\t-gateway-464020-n0-c2f9ef363c39.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

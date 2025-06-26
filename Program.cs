@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Configura la variable de entorno con la ruta del archivo JSON
-var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "serviceAccount.json");
+var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "inventorydb-464120-836b229fa581.json");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
 
 // Agrega servicios
@@ -18,19 +18,20 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<InventoryContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// Add services to the container.
+
+builder.Services.AddControllers();
 
 // Agrega servicios de API
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Add services to the container.
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
+app.UseStaticFiles();
 // Configure the HTTP request pipeline.
 /*if (app.Environment.IsDevelopment())
 {
@@ -44,7 +45,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseStaticFiles();
+
 app.UseRouting();
 app.UseHttpsRedirection();
 
