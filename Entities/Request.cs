@@ -30,7 +30,7 @@ namespace inventory8.Entities
         public bool Received { get; set; }
         public string Notes { get; set; }
         public UserStockAuditDTO User { get; set; }
-        public 
+        
     }
 
 
