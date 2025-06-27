@@ -13,7 +13,6 @@ namespace inventory8.Controllers
     public class UploadController : Controller
     {
         private readonly GoogleCloudStorageService _storageService;
-
         public UploadController()
         {
             _storageService = new GoogleCloudStorageService();
@@ -25,7 +24,7 @@ namespace inventory8.Controllers
         public async Task<IActionResult> UploadImage([FromForm] UploadImageRequest request)
     {
             if (request.File == null || request.File.Length == 0)
-                return BadRequest("No se subió archivo.");
+                return BadRequest("No se pudo subir archivo.");
 
             var imageUrl = await _storageService.UploadImageAsync(request.File);
             return Ok(new { url = imageUrl });
