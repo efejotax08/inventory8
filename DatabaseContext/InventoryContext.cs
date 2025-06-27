@@ -24,10 +24,22 @@ namespace inventory8.DatabaseContext
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<StockAuditProduct>().HasKey(x => new { x.StockAuditId, x.ProductId });
-            modelBuilder.Entity<ProductTag>().HasKey(x => new { x.TagId, x.ProductId });
+            modelBuilder.Entity<ProductTag>().HasKey(x => new { x.ProductId ,x.TagId });
             modelBuilder.Entity<SupplierTag>().HasKey(x => new { x.TagId, x.SupplierId });
             modelBuilder.Entity<RequestTag>().HasKey(x => new { x.TagId, x.RequestId });
             modelBuilder.Entity<RequestDetail>().HasKey(x => new { x.ProductId, x.RequestId });
+
+            // ✅ Relaciones ProductTag <-> Product y Tag
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Product)
+                .WithMany(p => p.ProductTags)
+                .HasForeignKey(pt => pt.ProductId);
+
+            modelBuilder.Entity<ProductTag>()
+                .HasOne(pt => pt.Tag)
+                .WithMany(t => t.ProductTags)
+                .HasForeignKey(pt => pt.TagId);
+
         }
     }
 

@@ -19,12 +19,34 @@ namespace inventory8.Controllers
 
         // GET: api/products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductDetailDTO>>> GetProducts()
         {
-            return await _context.Products
-                .Include(p => p.Supplier)
+            var products = await _context.Products
+                .Include(p => p.ProductTags)
+                    .ThenInclude(pt => pt.Tag)
+                .Select(p => new ProductDetailDTO
+                {
+                    ProductId = p.Id.ToString(),
+                    Name = p.Name,
+                    Description = p.Description,
+                    StockQuantity = p.StockQuantity,
+                    LowStockThreshold = p.LowStockThreshold,
+                    AcquisitionPrice = p.AcquisitionPrice,
+                    PhotoUrl = p.PhotoUrl,
+                    SubscribeToInventory = p.SubscribeToInventory,
+                    PackagingUnit = p.PackagingUnit,
+                    SupplierId = p.SupplierId,
+                    ProductTags = p.ProductTags.Select(pt => new ProductTagDto
+                    {
+                        TagId = pt.Tag.Id,
+                        TagName = pt.Tag.Name
+                    }).ToList()
+                })
                 .ToListAsync();
+
+            return products;
         }
+
 
         // GET: api/products/5
         [HttpGet("{id}")]
@@ -56,9 +78,9 @@ namespace inventory8.Controllers
                 SubscribeToInventory = dto.SubscribeToInventory,
                 PackagingUnit = dto.PackagingUnit,
                 SupplierId = dto.SupplierId,
-                Stats = "{}",
+                Stats="{}",
                 // Evita errores por nulos
-                ProductTags = new List<ProductTag>(),
+                ProductTags = dto.TagIds.Select(tagId => new ProductTag { TagId = tagId }).ToList(),
                 RequestDetails = new List<RequestDetail>(),
                 StockAuditProducts = new List<StockAuditProduct>()
             };
@@ -66,7 +88,7 @@ namespace inventory8.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            return Ok();
         }
 
 

@@ -1,6 +1,9 @@
 ﻿
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace inventory8.Entities
 {
+    [Table("users")]
     public class User
     {
         public int Id { get; set; }
@@ -12,6 +15,11 @@ namespace inventory8.Entities
         public ICollection<Request> HandledRequests { get; set; }
         public ICollection<StockAudit> HandledAudits { get; set; }
 
+    }
+    public class UserStockAuditDTO
+    {
+        public string UniqueIdentifier { get; set; }
+        public string Name { get; set; }
     }
 
 }
