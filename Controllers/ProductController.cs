@@ -42,13 +42,33 @@ namespace inventory8.Controllers
 
         // POST: api/products
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDTO dto)
         {
+            var product = new Product
+            {
+                ProductId = dto.ProductId,
+                Name = dto.Name,
+                Description = dto.Description,
+                StockQuantity = dto.StockQuantity,
+                LowStockThreshold = dto.LowStockThreshold,
+                AcquisitionPrice = dto.AcquisitionPrice,
+                PhotoUrl = dto.PhotoUrl,
+                SubscribeToInventory = dto.SubscribeToInventory,
+                PackagingUnit = dto.PackagingUnit,
+                SupplierId = dto.SupplierId,
+                Stats = "{}",
+                // Evita errores por nulos
+                ProductTags = new List<ProductTag>(),
+                RequestDetails = new List<RequestDetail>(),
+                StockAuditProducts = new List<StockAuditProduct>()
+            };
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
+
 
         // PUT: api/products/5
         [HttpPut("{id}")]
