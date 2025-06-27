@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Configura la variable de entorno con la ruta del archivo JSON
-var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "inventorydb-464120-836b229fa581.json");
+var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "t-gateway-464020-n0-c2f9ef363c39.json");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
 
 // Agrega servicios
