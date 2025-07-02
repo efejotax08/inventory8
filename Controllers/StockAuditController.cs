@@ -21,7 +21,7 @@ namespace inventory8.Controllers
         public async Task<ActionResult<IEnumerable<StockAuditDTO>>> GetStockAudits()
         {
             var audits = await _context.StockAudits
-                .Include(sa => sa.User)
+                .Include(sa => sa.HandledByUser)
                 .Select(sa => new StockAuditDTO
                 {
                     Id = sa.Id,
@@ -30,8 +30,9 @@ namespace inventory8.Controllers
                     HandledBy = sa.HandledBy,
                     User = new UserStockAuditDTO
                     {
-                        UniqueIdentifier = sa.User.UniqueIdentifier,
-                        Name = sa.User.Name
+                        Id=sa.Id,
+                        UniqueIdentifier = sa.HandledByUser.UniqueIdentifier,
+                        Name = sa.HandledByUser.Name
                     }
                 })
                 .ToListAsync();

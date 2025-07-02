@@ -16,6 +16,76 @@ namespace inventory8.Controllers
         {
             _context = context;
         }
+        //GET:api/extendedproducts
+        [HttpGet("extended")]
+        public async Task<ActionResult<List<ExtendedProductDetailDTO>>> GetAllExtendedProducts()
+        {
+            var products = await _context.Products
+                .Include(p => p.Supplier)
+                .Include(p => p.RequestDetails)
+                    .ThenInclude(rd => rd.Request)
+                        .ThenInclude(r => r.HandledByUser)
+                .Include(p => p.StockAuditProducts)
+                    .ThenInclude(sap => sap.StockAudit)
+                        .ThenInclude(a => a.HandledByUser)
+                .ToListAsync();
+
+            var result = products.Select(product => new ExtendedProductDetailDTO
+            {
+                LastAudit = product.LastAudit ?? DateTime.MinValue,
+                AcquisitionPrice = product.AcquisitionPrice,
+                SubscribeToInventory = product.SubscribeToInventory,
+                PackagingUnit = product.PackagingUnit,
+                Stats = product.Stats ?? "{}",
+
+                Supplier = new SupplierDetailDTO
+                {
+                    Id = product.Supplier?.Id ?? 0,
+                    UniqueIdentifier = product.Supplier?.UniqueIdentifier ?? "",
+                    Name = product.Supplier?.Name,
+                    Contact = product.Supplier?.Contact
+                },
+
+                Requests = product.RequestDetails
+                    .Where(rd => rd.Request != null)
+                    .Select(rd => new RequestDTO
+                    {
+                        Id = rd.Request.Id,
+                        Date = rd.Request.Date,
+                        Price = rd.Request.Price,
+                        Received = rd.Request.Received,
+                        Notes = rd.Request.Notes,
+                        HandledByUser = new UserStockAuditDTO
+                        {
+                            Id = rd.Request.HandledByUser?.Id ?? 0,
+                            UniqueIdentifier = rd.Request.HandledByUser?.UniqueIdentifier ?? "",
+                            Name = rd.Request.HandledByUser?.Name ?? ""
+                        }
+                    })
+                    .ToList(),
+
+                Audits = product.StockAuditProducts
+                    .Where(sap => sap.StockAudit != null)
+                    .Select(sap => new StockAuditDTO
+                    {
+                        Id = sap.StockAudit.Id,
+                        Datetime = sap.StockAudit.Datetime,
+                        Notes = sap.StockAudit.Notes,
+                        HandledBy = sap.StockAudit.HandledBy,
+                        User = new UserStockAuditDTO
+                        {
+                            Id = sap.StockAudit.HandledByUser?.Id ?? 0,
+                            UniqueIdentifier = sap.StockAudit.HandledByUser?.UniqueIdentifier ?? "",
+                            Name = sap.StockAudit.HandledByUser?.Name ?? ""
+                        }
+                    })
+                    .ToList()
+
+            }).ToList();
+
+            return Ok(result);
+        }
+
 
         // GET: api/products
         [HttpGet]

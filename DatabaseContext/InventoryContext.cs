@@ -29,7 +29,8 @@ namespace inventory8.DatabaseContext
             modelBuilder.Entity<RequestTag>().HasKey(x => new { x.TagId, x.RequestId });
             modelBuilder.Entity<RequestDetail>().HasKey(x => new { x.ProductId, x.RequestId });
 
-            // ✅ Relaciones ProductTag <-> Product y Tag
+
+            // Relaciones ProductTag
             modelBuilder.Entity<ProductTag>()
                 .HasOne(pt => pt.Product)
                 .WithMany(p => p.ProductTags)
@@ -40,6 +41,74 @@ namespace inventory8.DatabaseContext
                 .WithMany(t => t.ProductTags)
                 .HasForeignKey(pt => pt.TagId);
 
+            // Relaciones RequestTag
+            modelBuilder.Entity<RequestTag>()
+                .HasOne(rt => rt.Request)
+                .WithMany(r => r.RequestTags)
+                .HasForeignKey(rt => rt.RequestId);
+
+            modelBuilder.Entity<RequestTag>()
+                .HasOne(rt => rt.Tag)
+                .WithMany(t => t.RequestTags)
+                .HasForeignKey(rt => rt.TagId);
+
+            // Relaciones SupplierTag
+            modelBuilder.Entity<SupplierTag>()
+                .HasOne(st => st.Supplier)
+                .WithMany(s => s.SupplierTags)
+                .HasForeignKey(st => st.SupplierId);
+
+            modelBuilder.Entity<SupplierTag>()
+                .HasOne(st => st.Tag)
+                .WithMany(t => t.SupplierTags)
+                .HasForeignKey(st => st.TagId);
+
+            // Relaciones Request → User
+            modelBuilder.Entity<Request>()
+                .HasOne(r => r.HandledByUser)
+                .WithMany()
+                .HasForeignKey(r => r.HandledBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relaciones StockAudit → User
+            modelBuilder.Entity<StockAudit>()
+                .HasOne(sa => sa.HandledByUser)
+                .WithMany()
+                .HasForeignKey(sa => sa.HandledBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relaciones RequestDetail → Request, Product, Supplier
+            modelBuilder.Entity<RequestDetail>()
+                .HasOne(rd => rd.Product)
+                .WithMany(p => p.RequestDetails)
+                .HasForeignKey(rd => rd.ProductId);
+
+            modelBuilder.Entity<RequestDetail>()
+                .HasOne(rd => rd.Request)
+                .WithMany(r => r.RequestDetails)
+                .HasForeignKey(rd => rd.RequestId);
+
+            modelBuilder.Entity<RequestDetail>()
+                .HasOne(rd => rd.Supplier)
+                .WithMany()
+                .HasForeignKey(rd => rd.SupplierId);
+
+            // Relaciones Product → Supplier
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Supplier)
+                .WithMany(s => s.Products)
+                .HasForeignKey(p => p.SupplierId);
+
+            // Relaciones StockAuditProduct → Product y StockAudit
+            modelBuilder.Entity<StockAuditProduct>()
+                .HasOne(sap => sap.Product)
+                .WithMany(p => p.StockAuditProducts)
+                .HasForeignKey(sap => sap.ProductId);
+
+            modelBuilder.Entity<StockAuditProduct>()
+                .HasOne(sap => sap.StockAudit)
+                .WithMany(sa => sa.StockAuditProducts)
+                .HasForeignKey(sap => sap.StockAuditId);
         }
     }
 

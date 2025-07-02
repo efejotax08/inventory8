@@ -19,6 +19,18 @@ namespace inventory8.Entities
         public int SupplierId { get; set; }
         public List<int> TagIds { get; set; } = new();
     }
+    public class ExtendedProductDetailDTO
+    {
+        public DateTime LastAudit { get; set; }
+        public decimal AcquisitionPrice { get; set; }
+        public bool SubscribeToInventory { get; set; }
+        public string PackagingUnit { get; set; } = null!;
+        public string Stats { get; set; } = null!;
+        public SupplierDetailDTO Supplier { get; set; }     
+        public List<RequestDTO> Requests { get; set; } = new();
+        public List<StockAuditDTO> Audits { get; set; }= new();
+    }
+
     public class ProductDetailDTO
     {
         public string ProductId { get; set; } = null!;

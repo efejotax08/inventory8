@@ -14,10 +14,8 @@ namespace inventory8.Entities
         public string Notes { get; set; }
         public int HandledBy { get; set; }
         [ForeignKey(nameof(HandledBy))]
-        public User User { get; set; } = new User();
-
-
-        public ICollection<StockAuditProduct> StockAuditProducts { get; set; } 
+        public User HandledByUser { get; set; } = new User();
+        public ICollection<StockAuditProduct> StockAuditProducts { get; set; }  
     }
     public class StockAuditDTO
     {
