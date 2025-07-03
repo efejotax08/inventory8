@@ -147,6 +147,8 @@ namespace inventory8.Controllers
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("Authorization", authHeader);
+            request.Content = new StringContent(""); // El cuerpo puede estar vacío, ya que todo va en el header
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
