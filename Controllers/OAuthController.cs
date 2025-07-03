@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Google.Apis.Auth.OAuth2;
+using inventory8.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System;
-
-using inventory8.Helpers;
+using System.Web;
 
 namespace inventory8.Controllers
 {
@@ -12,17 +14,25 @@ namespace inventory8.Controllers
     public class OAuthController : ControllerBase
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
+        private readonly string _clientId;
+        private readonly string _clientSecret;
+        private readonly string _callbackUrl;
 
-        public OAuthController(IHttpClientFactory httpClientFactory)
+        public OAuthController(IMemoryCache cache, IHttpClientFactory factory, IConfiguration config)
         {
-            _httpClient = httpClientFactory.CreateClient();
+            _httpClient = factory.CreateClient();
+            _cache = cache;
+            _clientId = config["CleverCloud:ClientId"];
+            _clientSecret = config["CleverCloud:ClientSecret"];
+            _callbackUrl = "https://app-aa670142-e807-4859-be5b-19fad2323953.cleverapps.io/api/oauth/callback"; // o también podrías sacarlo de config si quieres
         }
         [HttpPost("request_token")]
         public async Task<IActionResult> RequestToken()
         {
-            var consumerKey = "Iq8B1YKaUU88OJXoAo92ooLC4pX06c";
-            var consumerSecret = "OF0YPVYjvfJJk6uQjUYLRbRx1U1pfG";
-            var callbackUrl = "https://app-aa670142-e807-4859-be5b-19fad2323953.cleverapps.io/Callback";
+           // var consumerKey = "Iq8B1YKaUU88OJXoAo92ooLC4pX06c";
+            //var consumerSecret = "OF0YPVYjvfJJk6uQjUYLRbRx1U1pfG";
+           // var callbackUrl = "https://app-aa670142-e807-4859-be5b-19fad2323953.cleverapps.io/api/oauth/callback";
 
             var oauthNonce = OAuth1Helper.GenerateNonce();
             var oauthTimestamp = OAuth1Helper.GenerateTimestamp();
@@ -30,16 +40,16 @@ namespace inventory8.Controllers
             var oauthSignatureMethod = "PLAINTEXT";
 
             // PLAINTEXT signature
-            var oauthSignature = $"{OAuth1Helper.UrlEncode(consumerSecret)}&"; // No token_secret aún
+            var oauthSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&";
 
             var authHeader = $"OAuth " +
-                $"oauth_callback=\"{OAuth1Helper.UrlEncode(callbackUrl)}\", " +
-                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(consumerKey)}\", " +
-                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(oauthNonce)}\", " +
-                $"oauth_signature=\"{OAuth1Helper.UrlEncode(oauthSignature)}\", " +
-                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
-                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(oauthTimestamp)}\", " +
-                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
+         $"oauth_callback=\"{OAuth1Helper.UrlEncode(_callbackUrl)}\", " +
+         $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
+         $"oauth_nonce=\"{OAuth1Helper.UrlEncode(oauthNonce)}\", " +
+         $"oauth_signature=\"{OAuth1Helper.UrlEncode(oauthSignature)}\", " +
+         $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+         $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(oauthTimestamp)}\", " +
+         $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
 
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.clever-cloud.com/v2/oauth/request_token");
             request.Headers.Add("Authorization", authHeader);
@@ -53,9 +63,108 @@ namespace inventory8.Controllers
             {
                 return StatusCode((int)response.StatusCode, content);
             }
-
-            return Ok(content);
+            var queryParams = HttpUtility.ParseQueryString(content);
+            var token = queryParams["oauth_token"];
+            var secret = queryParams["oauth_token_secret"];
+            _cache.Set("oauth:req:" + token, secret, TimeSpan.FromMinutes(20));
+            return Ok(new
+            {
+                message = "Token generado",
+                token,
+                secret,
+                authUrl = $"https://api.clever-cloud.com/v2/oauth/authorize?oauth_token={token}"
+            });
+            //return Ok(content);
         }
+
+
+        [HttpPost("access-token")]
+        public async Task<IActionResult> AccessToken([FromQuery] string token, [FromQuery] string verifier)
+        {
+            var consumerKey = "Iq8B1YKaUU88OJXoAo92ooLC4pX06c";
+            var consumerSecret = "OF0YPVYjvfJJk6uQjUYLRbRx1U1pfG";
+            var tokenSecret = ""; // Solo si Clever te lo devolvió antes (a veces no lo hacen en request_token, revisar)
+
+            var requestUrl = "https://api.clever-cloud.com/v2/oauth/access_token";
+
+            var oauthNonce = OAuth1Helper.GenerateNonce();
+            var oauthTimestamp = OAuth1Helper.GenerateTimestamp();
+            var oauthSignatureMethod = "PLAINTEXT";
+            var oauthVersion = "1.0";
+
+            var signature = $"{OAuth1Helper.UrlEncode(consumerSecret)}&{OAuth1Helper.UrlEncode(tokenSecret)}";
+
+            var authHeader = $"OAuth " +
+                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(consumerKey)}\", " +
+                $"oauth_token=\"{OAuth1Helper.UrlEncode(token)}\", " +
+                $"oauth_verifier=\"{OAuth1Helper.UrlEncode(verifier)}\", " +
+                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(oauthTimestamp)}\", " +
+                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(oauthNonce)}\", " +
+                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\", " +
+                $"oauth_signature=\"{OAuth1Helper.UrlEncode(signature)}\"";
+
+            var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+            request.Headers.Add("Authorization", authHeader);
+            request.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+
+            var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode, content);
+
+            return Ok(content); // Esto contendrá oauth_token & oauth_token_secret del usuario
+        }
+
+        [HttpGet("callback")]
+        public async Task<IActionResult> Callback([FromQuery] string oauth_token, [FromQuery] string oauth_verifier)
+        {
+            // 1. Recupera el oauth_token_secret que guardaste cuando hiciste el request_token
+            if (!_cache.TryGetValue("oauth:req:" + oauth_token, out string tokenSecret))
+                return BadRequest("Token secret not found");
+
+
+            var url = "https://api.clever-cloud.com/v2/oauth/access_token";
+
+            var oauthNonce = OAuth1Helper.GenerateNonce();
+            var oauthTimestamp = OAuth1Helper.GenerateTimestamp();
+            var oauthVersion = "1.0";
+            var oauthSignatureMethod = "PLAINTEXT";
+
+            // PLAINTEXT signature
+            var oauthSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&{OAuth1Helper.UrlEncode(tokenSecret)}";
+
+            var authHeader = $"OAuth " +
+                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
+                $"oauth_token=\"{OAuth1Helper.UrlEncode(oauth_token)}\", " +
+                $"oauth_verifier=\"{OAuth1Helper.UrlEncode(oauth_verifier)}\", " +
+                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+                $"oauth_signature=\"{OAuth1Helper.UrlEncode(oauthSignature)}\", " +
+                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(oauthTimestamp)}\", " +
+                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(oauthNonce)}\", " +
+                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Headers.Add("Authorization", authHeader);
+
+            var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode, content);
+
+            var query = System.Web.HttpUtility.ParseQueryString(content);
+            var accessToken = query["oauth_token"];
+            var accessTokenSecret = query["oauth_token_secret"];
+
+            // Aquí puedes consultar /v2/self o emitir un JWT si ya existe el usuario
+
+            return Ok(new { accessToken, accessTokenSecret });
+        }
+
+
+
 
     }
 }

@@ -11,8 +11,9 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 
 /*Section: Clever Cloud oAuth*/
-// Configura autenticación
+// Configura autenticación y cache
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 /**/
 // Configura la variable de entorno con la ruta del archivo JSON
 var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "t-gateway-464020-n0-c2f9ef363c39.json");
