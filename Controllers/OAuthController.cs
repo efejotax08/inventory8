@@ -3,6 +3,7 @@ using Google.Apis.Auth.OAuth2;
 using inventory8.DatabaseContext;
 using inventory8.Entities;
 using inventory8.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,6 +19,7 @@ using System.Web;
 
 namespace inventory8.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/oauth")]
     public class OAuthController : ControllerBase
@@ -29,12 +31,16 @@ namespace inventory8.Controllers
         private readonly string _clientSecret;
         private readonly string _callbackUrl;
         private readonly string _jwtKey;
+        private readonly string _issuer;
+        private readonly string _audience;
         public OAuthController(IMemoryCache cache, IHttpClientFactory factory, IConfiguration config, InventoryContext context)
         {
             _context = context;
             _httpClient = factory.CreateClient();
             _cache = cache;
             _jwtKey = config["Jwt:Key"];
+            _issuer = config["Jwt:Issuer"];
+            _audience = config["Jwt:Audience"];
             _clientId = config["CleverCloud:ClientId"];
             _clientSecret = config["CleverCloud:ClientSecret"];
             _callbackUrl = "https://app-aa670142-e807-4859-be5b-19fad2323953.cleverapps.io/api/oauth/callback"; // o también podrías sacarlo de config si quieres
@@ -211,10 +217,13 @@ namespace inventory8.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Email  , email),
-                new Claim(ClaimTypes.NameIdentifier, name ?? "Sin nombre aún "), 
+                     new Claim(ClaimTypes.Email, email),
+        new Claim(ClaimTypes.Name, name ?? "Sin nombre aún"),          // Nombre real
+        new Claim(ClaimTypes.NameIdentifier, uniqueIdentifier.ToString())        // ID único del usuario
             }),
                 Expires = DateTime.UtcNow.AddHours(2),
+                Issuer =_issuer,      
+                Audience = _audience,  
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

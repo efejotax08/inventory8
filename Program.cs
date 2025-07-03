@@ -2,19 +2,56 @@ using inventory8.DatabaseContext;
 using inventory8.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+/*Section:JWT*/
+// Clave secreta (usa un secreto fuerte en producción)
+var claveSecreta = builder.Configuration["Jwt:Key"] ?? "clave-super-secreta-segura";
+var emisor = builder.Configuration["Jwt:Issuer"] ?? "tu-backend";
+var audiencia = builder.Configuration["Jwt:Audience"] ?? "tu-frontend";
+
+// Configurar autenticación JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false; // true en producción
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = emisor,
+            ValidAudience = audiencia,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(claveSecreta)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+/**/
+
 
 /*Section: Clever Cloud oAuth*/
 // Configura autenticación y cache
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 /**/
+//Notificaciones
+builder.Services.AddScoped<UserService>();
+
+
 // Configura la variable de entorno con la ruta del archivo JSON
 var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "t-gateway-464020-n0-c2f9ef363c39.json");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
