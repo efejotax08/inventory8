@@ -1,9 +1,11 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using inventory8.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -162,9 +164,105 @@ namespace inventory8.Controllers
 
             // Aquí puedes consultar /v2/self o emitir un JWT si ya existe el usuario
 
-            return Ok(new { accessToken, accessTokenSecret });
+            // ✅ Aquí haces la llamada a /v2/self
+            var userInfoUrl = "https://api.clever-cloud.com/v2/self";
+
+            var userNonce = OAuth1Helper.GenerateNonce();
+            var userTimestamp = OAuth1Helper.GenerateTimestamp();
+
+            var userSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&{OAuth1Helper.UrlEncode(accessTokenSecret)}";
+
+            var userAuthHeader = $"OAuth " +
+                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
+                $"oauth_token=\"{OAuth1Helper.UrlEncode(accessToken)}\", " +
+                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+                $"oauth_signature=\"{OAuth1Helper.UrlEncode(userSignature)}\", " +
+                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(userTimestamp)}\", " +
+                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(userNonce)}\", " +
+                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
+
+            var userRequest = new HttpRequestMessage(HttpMethod.Get, userInfoUrl);
+            userRequest.Headers.Add("Authorization", userAuthHeader);
+
+            var userResponse = await _httpClient.SendAsync(userRequest);
+            var userContent = await userResponse.Content.ReadAsStringAsync();
+
+            if (!userResponse.IsSuccessStatusCode)
+                return StatusCode((int)userResponse.StatusCode, userContent);
+
+            // ✅ Aquí tienes los datos del usuario
+            var userJson = JsonDocument.Parse(content);
+            var user = userJson.RootElement;
+            var uniqueIdentifier = userJson.RootElement.GetProperty("id").GetString();
+            var name = userJson.RootElement.GetProperty("name").GetString();
+
+            // Buscar en la base de datos
+            // var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+
+            // if (user == null)
+            //   return Unauthorized("Usuario no registrado");
+
+            // Opcional: Generar JWT o establecer sesión
+            return Ok(new
+            {
+                userJson,
+                uniqueIdentifier,
+                Token = accessToken,
+                name,
+                TokenSecret = accessTokenSecret
+            });
         }
 
+        [HttpGet("api/oauth/userinfo")]
+        private async Task<IActionResult> GetUserInfo([FromQuery] string accessToken, [FromQuery] string accessTokenSecret)
+        {
+            var url = "https://api.clever-cloud.com/v2/self";
+
+            var oauthNonce = OAuth1Helper.GenerateNonce();
+            var oauthTimestamp = OAuth1Helper.GenerateTimestamp();
+            var oauthVersion = "1.0";
+            var oauthSignatureMethod = "PLAINTEXT";
+
+            var oauthSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&{OAuth1Helper.UrlEncode(accessTokenSecret)}";
+
+            var authHeader = $"OAuth " +
+                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
+                $"oauth_token=\"{OAuth1Helper.UrlEncode(accessToken)}\", " +
+                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+                $"oauth_signature=\"{OAuth1Helper.UrlEncode(oauthSignature)}\", " +
+                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(oauthTimestamp)}\", " +
+                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(oauthNonce)}\", " +
+                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("Authorization", authHeader);
+
+            var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode, content);
+
+            var userJson = JsonDocument.Parse(content);
+            var uniqueIdentifier = userJson.RootElement.GetProperty("id").GetString();
+            var name = userJson.RootElement.GetProperty("name").GetString();
+
+            // Buscar en la base de datos
+           // var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+
+           // if (user == null)
+             //   return Unauthorized("Usuario no registrado");
+
+            // Opcional: Generar JWT o establecer sesión
+            return Ok(new
+            {
+                userJson,
+                uniqueIdentifier,
+                Token = accessToken,
+                name,
+                TokenSecret = accessTokenSecret
+            });
+        }
 
 
 
