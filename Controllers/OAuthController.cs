@@ -1,5 +1,7 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using Google;
+using Google.Apis.Auth.OAuth2;
 using inventory8.DatabaseContext;
+using inventory8.Entities;
 using inventory8.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,8 +29,9 @@ namespace inventory8.Controllers
         private readonly string _clientSecret;
         private readonly string _callbackUrl;
         private readonly string _jwtKey;
-        public OAuthController(IMemoryCache cache, IHttpClientFactory factory, IConfiguration config)
+        public OAuthController(IMemoryCache cache, IHttpClientFactory factory, IConfiguration config, InventoryContext context)
         {
+            _context = context;
             _httpClient = factory.CreateClient();
             _cache = cache;
             _jwtKey = config["Jwt:Key"];
@@ -199,6 +202,7 @@ namespace inventory8.Controllers
             var userJson = JsonDocument.Parse(content);
             var uniqueIdentifier = userJson.RootElement.GetProperty("id").GetString();
             var name = userJson.RootElement.GetProperty("name").GetString();
+            var email = userJson.RootElement.GetProperty("email").GetString();
 
             // Paso 5: Generar un JWT para el frontend
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -207,11 +211,10 @@ namespace inventory8.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim("cc_token", accessToken),
-                new Claim("cc_secret", accessTokenSecret),
-                new Claim(ClaimTypes.NameIdentifier, "clever_user"), // o algún ID local si lo vinculas
+                    new Claim(ClaimTypes.Email  , email),
+                new Claim(ClaimTypes.NameIdentifier, name), 
             }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -221,18 +224,29 @@ namespace inventory8.Controllers
 
 
             //Buscar en la base de datos
-           /*  var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
 
-           if (user == null)*/
-           // return Unauthorized("Usuario no registrado");
+            if (user == null)
+            {
+                user = new User
+                {
+                    UniqueIdentifier = uniqueIdentifier,
+                    Name = name,
+                    Settings = "{}",
+                    Permissions = "[]"
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+
+
+
 
             // Opcional: Generar JWT o establecer sesión
             return Ok(new
             {
-                userJson,
-                uniqueIdentifier,
-                name,
-              //  user,
+               user,
                 jwt = jwtToken
             });
 
