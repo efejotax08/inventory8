@@ -212,7 +212,7 @@ namespace inventory8.Controllers
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Email  , email),
-                new Claim(ClaimTypes.NameIdentifier, name), 
+                new Claim(ClaimTypes.NameIdentifier, name ?? "Sin nombre aún "), 
             }),
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
