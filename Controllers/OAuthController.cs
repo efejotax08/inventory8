@@ -162,59 +162,66 @@ namespace inventory8.Controllers
             var accessToken = query["oauth_token"];
             var accessTokenSecret = query["oauth_token_secret"];
 
+             return Ok(new
+         {
+             Token = accessToken,
+             TokenSecret = accessTokenSecret
+         });
             // Aquí puedes consultar /v2/self o emitir un JWT si ya existe el usuario
 
             // ✅ Aquí haces la llamada a /v2/self
-            var userInfoUrl = "https://api.clever-cloud.com/v2/self";
+            /*  var userInfoUrl = "https://api.clever-cloud.com/v2/self";
 
-            var userNonce = OAuth1Helper.GenerateNonce();
-            var userTimestamp = OAuth1Helper.GenerateTimestamp();
+              var userNonce = OAuth1Helper.GenerateNonce();
+              var userTimestamp = OAuth1Helper.GenerateTimestamp();
 
-            var userSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&{OAuth1Helper.UrlEncode(accessTokenSecret)}";
+              var userSignature = $"{OAuth1Helper.UrlEncode(_clientSecret)}&{OAuth1Helper.UrlEncode(accessTokenSecret)}";
 
-            var userAuthHeader = $"OAuth " +
-                $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
-                $"oauth_token=\"{OAuth1Helper.UrlEncode(accessToken)}\", " +
-                $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
-                $"oauth_signature=\"{OAuth1Helper.UrlEncode(userSignature)}\", " +
-                $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(userTimestamp)}\", " +
-                $"oauth_nonce=\"{OAuth1Helper.UrlEncode(userNonce)}\", " +
-                $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
+              var userAuthHeader = $"OAuth " +
+                  $"oauth_consumer_key=\"{OAuth1Helper.UrlEncode(_clientId)}\", " +
+                  $"oauth_token=\"{OAuth1Helper.UrlEncode(accessToken)}\", " +
+                  $"oauth_signature_method=\"{OAuth1Helper.UrlEncode(oauthSignatureMethod)}\", " +
+                  $"oauth_signature=\"{OAuth1Helper.UrlEncode(userSignature)}\", " +
+                  $"oauth_timestamp=\"{OAuth1Helper.UrlEncode(userTimestamp)}\", " +
+                  $"oauth_nonce=\"{OAuth1Helper.UrlEncode(userNonce)}\", " +
+                  $"oauth_version=\"{OAuth1Helper.UrlEncode(oauthVersion)}\"";
 
-            var userRequest = new HttpRequestMessage(HttpMethod.Get, userInfoUrl);
-            userRequest.Headers.Add("Authorization", userAuthHeader);
+              var userRequest = new HttpRequestMessage(HttpMethod.Get, userInfoUrl);
+              userRequest.Headers.Add("Authorization", userAuthHeader);
 
-            var userResponse = await _httpClient.SendAsync(userRequest);
-            var userContent = await userResponse.Content.ReadAsStringAsync();
+              var userResponse = await _httpClient.SendAsync(userRequest);
+              var userContent = await userResponse.Content.ReadAsStringAsync();
 
-            if (!userResponse.IsSuccessStatusCode)
-                return StatusCode((int)userResponse.StatusCode, userContent);
+              if (!userResponse.IsSuccessStatusCode)
+                  return StatusCode((int)userResponse.StatusCode, userContent);
 
-            // ✅ Aquí tienes los datos del usuario
-            var userJson = JsonDocument.Parse(content);
-            var user = userJson.RootElement;
-            var uniqueIdentifier = userJson.RootElement.GetProperty("id").GetString();
-            var name = userJson.RootElement.GetProperty("name").GetString();
+              // ✅ Aquí tienes los datos del usuario
+              var userJson = JsonDocument.Parse(content);
+              var user = userJson.RootElement;
+              var uniqueIdentifier = userJson.RootElement.GetProperty("id").GetString();
+              var name = userJson.RootElement.GetProperty("name").GetString();
 
-            // Buscar en la base de datos
-            // var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+              // Buscar en la base de datos
+              // var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
 
-            // if (user == null)
-            //   return Unauthorized("Usuario no registrado");
+              // if (user == null)
+              //   return Unauthorized("Usuario no registrado");
 
-            // Opcional: Generar JWT o establecer sesión
-            return Ok(new
-            {
-                userJson,
-                uniqueIdentifier,
-                Token = accessToken,
-                name,
-                TokenSecret = accessTokenSecret
-            });
+              // Opcional: Generar JWT o establecer sesión
+
+              */
+            /* return Ok(new
+             {
+                 userJson,
+                 uniqueIdentifier,
+                 Token = accessToken,
+                 name,
+                 TokenSecret = accessTokenSecret
+             });*/
         }
 
         [HttpGet("api/oauth/userinfo")]
-        private async Task<IActionResult> GetUserInfo([FromQuery] string accessToken, [FromQuery] string accessTokenSecret)
+        public async Task<IActionResult> GetUserInfo([FromQuery] string accessToken, [FromQuery] string accessTokenSecret)
         {
             var url = "https://api.clever-cloud.com/v2/self";
 
