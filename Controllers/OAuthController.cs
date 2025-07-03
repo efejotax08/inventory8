@@ -221,10 +221,10 @@ namespace inventory8.Controllers
 
 
             //Buscar en la base de datos
-             var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+           /*  var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
 
-           if (user == null)
-            return Unauthorized("Usuario no registrado");
+           if (user == null)*/
+           // return Unauthorized("Usuario no registrado");
 
             // Opcional: Generar JWT o establecer sesión
             return Ok(new
@@ -232,7 +232,7 @@ namespace inventory8.Controllers
                 userJson,
                 uniqueIdentifier,
                 name,
-                user,
+              //  user,
                 jwt = jwtToken
             });
 
