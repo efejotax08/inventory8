@@ -49,8 +49,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 /**/
 //Notificaciones
-builder.Services.AddScoped<UserService>();
-
+//builder.Services.AddScoped<UserService>();
+builder.Services.AddHostedService<InventoryMonitorService>();
+builder.Services.AddScoped<InventoryAlertService>();
+builder.Services.AddSingleton<UserNotificationService>();
 
 // Configura la variable de entorno con la ruta del archivo JSON
 var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "t-gateway-464020-n0-c2f9ef363c39.json");

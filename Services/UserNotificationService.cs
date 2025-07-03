@@ -9,11 +9,11 @@ namespace inventory8.Services
         public string FcmToken { get; set; } = string.Empty;
     }
 
-    public class UserService
+    public class UserNotificationService
     {
         private readonly InventoryContext _context;
 
-        public UserService(InventoryContext context)
+        public UserNotificationService(InventoryContext context)
         {
             _context = context;
         }
@@ -21,7 +21,7 @@ namespace inventory8.Services
         public async Task<bool> ActualizarFcmTokenAsync(string uniqueIdentifier, string fcmToken)
         {
             var user = await _context.Users
-     .FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
+             .FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
             if (user == null)
                 return false;
 

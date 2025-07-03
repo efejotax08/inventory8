@@ -9,9 +9,9 @@ namespace inventory8.Controllers
     [Route("api/users")]
     public class UsersController : ControllerBase
     {
-        private readonly UserService _userService;
+        private readonly UserNotificationService  _userService;
 
-        public UsersController(UserService userService)
+        public UsersController(UserNotificationService userService)
         {
             _userService = userService;
         }

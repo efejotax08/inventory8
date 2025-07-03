@@ -97,7 +97,7 @@ namespace inventory8.Controllers
 
 
         [HttpPost("access-token")]
-        public async Task<IActionResult> AccessToken([FromQuery] string token, [FromQuery] string verifier)
+        private async Task<IActionResult> AccessToken([FromQuery] string token, [FromQuery] string verifier)
         {
             var consumerKey = "Iq8B1YKaUU88OJXoAo92ooLC4pX06c";
             var consumerSecret = "OF0YPVYjvfJJk6uQjUYLRbRx1U1pfG";
@@ -230,8 +230,6 @@ namespace inventory8.Controllers
             var jwt = tokenHandler.CreateToken(tokenDescriptor);
             var jwtToken = tokenHandler.WriteToken(jwt);
 
-
-
             //Buscar en la base de datos
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier);
 
@@ -249,19 +247,12 @@ namespace inventory8.Controllers
                 await _context.SaveChangesAsync();
             }
 
-
-
-
-            // Opcional: Generar JWT o establecer sesión
             return Ok(new
             {
                user,
                 jwt = jwtToken
             });
 
-
-              // Buscar en la base de datos
-              // var user = await _context.Users.FirstOrDefaultAsync(u => u.UniqueIdentifier == uniqueIdentifier
         }
         
         [HttpGet("api/oauth/userinfo")]

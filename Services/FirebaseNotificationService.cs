@@ -32,6 +32,9 @@ namespace inventory8.Services
 
         public async Task<string> EnviarNotificacionAsync(string titulo, string cuerpo, string fcmToken)
         {
+            if (string.IsNullOrEmpty(fcmToken))
+                throw new ArgumentException("El FCM Token no puede ser nulo o vacío.", nameof(fcmToken));
+
             var mensaje = new Message
             {
                 Token = fcmToken,
@@ -41,13 +44,38 @@ namespace inventory8.Services
                     Body = cuerpo
                 },
                 Data = new Dictionary<string, string>
-            {
-                { "tipo", "alerta" },
-                { "origen", "backend-dotnet" }
-            }
+        {
+            { "tipo", "alerta" },
+            { "origen", "backend-dotnet" }
+        },
+                Android = new AndroidConfig
+                {
+                    Priority = Priority.High,
+                    Notification = new AndroidNotification
+                    {
+                        Sound = "default"
+                    }
+                },
+                Apns = new ApnsConfig
+                {
+                    Aps = new Aps
+                    {
+                        Sound = "default"
+                    }
+                }
             };
 
-            return await _messaging.SendAsync(mensaje);
+            try
+            {
+                return await _messaging.SendAsync(mensaje);
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                // Puedes loguear más detalles si lo necesitas
+                Console.WriteLine($"Error al enviar notificación: {ex.Message}");
+                throw;
+            }
         }
+
     }
 }
