@@ -20,6 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Credentials\notif_inventory8.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="Credentials\serviceAccount.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

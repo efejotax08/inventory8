@@ -7,7 +7,6 @@ namespace inventory8.DatabaseContext
     {
         public InventoryContext(DbContextOptions<InventoryContext> options)
             : base(options) { }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<StockAudit> StockAudits { get; set; }

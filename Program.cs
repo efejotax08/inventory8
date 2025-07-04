@@ -12,6 +12,8 @@ using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 /*Section:JWT*/
 // Clave secreta (usa un secreto fuerte en producción)
 var claveSecreta = builder.Configuration["Jwt:Key"] ?? "clave-super-secreta-segura";

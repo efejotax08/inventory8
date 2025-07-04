@@ -21,6 +21,7 @@ namespace inventory8.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                _logger.LogInformation("⏱️ Nuevo proceso");
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var alertService = scope.ServiceProvider.GetRequiredService<InventoryAlertService>();
@@ -36,7 +37,7 @@ namespace inventory8.Services
                 }
 
                 // Esperar 1 hora (puedes ajustar este tiempo)
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
     }

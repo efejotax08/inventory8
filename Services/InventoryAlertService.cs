@@ -8,11 +8,13 @@ namespace inventory8.Services
     {
         private readonly InventoryContext _context;
         private readonly FirebaseNotificationService _notificacionService;
+        private readonly ILogger<InventoryMonitorService> _logger;
 
-        public InventoryAlertService(InventoryContext context, FirebaseNotificationService usernotificacionService)
+        public InventoryAlertService(InventoryContext context, FirebaseNotificationService usernotificacionService, ILogger<InventoryMonitorService> logger)
         {
             _context = context;
             _notificacionService = usernotificacionService;
+            _logger = logger;
         }
 
         public async Task RevisarYNotificarAsync()
@@ -22,14 +24,16 @@ namespace inventory8.Services
                 .Where(p => p.SubscribeToInventory && p.StockQuantity <= p.LowStockThreshold)
                 .Include(p => p.Supplier)
                 .ToListAsync();
-
+            _logger.LogInformation("⏱️ Productos Encontrados");
+            _logger.LogInformation(productosBajos.Count.ToString());
             if (!productosBajos.Any()) return;
 
             // Obtener usuarios que recibirán notificación
             var usuarios = await _context.Users
                 .Where(u => u.Settings != null && u.Settings.Contains("\"notifications\":"))
                 .ToListAsync();
-
+            _logger.LogInformation("⏱️ Usuarios Encontrados");
+            _logger.LogInformation(usuarios.Count.ToString());
             foreach (var producto in productosBajos)
             {
                 foreach (var usuario in usuarios)
