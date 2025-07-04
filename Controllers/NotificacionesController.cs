@@ -10,9 +10,9 @@ namespace inventory8.Controllers
     {
         private readonly FirebaseNotificationService _firebase;
 
-        public NotificacionesController()
+        public NotificacionesController(FirebaseNotificationService firebase)
         {
-            _firebase = new FirebaseNotificationService();
+            _firebase = firebase;
         }
 
         [HttpPost]

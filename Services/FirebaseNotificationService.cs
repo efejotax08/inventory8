@@ -8,26 +8,43 @@ namespace inventory8.Services
     {
         private readonly FirebaseMessaging _messaging;
 
-        public FirebaseNotificationService()
+        public FirebaseNotificationService(IWebHostEnvironment env)
         {
-            // Obtener el JSON desde la variable de entorno
-            var firebaseJson = Environment.GetEnvironmentVariable("FIREBASE_CONFIG");
-
-            if (string.IsNullOrWhiteSpace(firebaseJson))
+            // Evita inicialización múltiple
+            if (FirebaseApp.DefaultInstance != null)
             {
-                throw new InvalidOperationException("La variable de entorno 'FIREBASE_CONFIG' no está configurada.");
+                _messaging = FirebaseMessaging.DefaultInstance;
+                return;
             }
+            GoogleCredential credential;
 
-            // Inicializar la app de Firebase si no está ya inicializada
-            if (FirebaseApp.DefaultInstance == null)
+            if (env.IsDevelopment())
             {
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.FromJson(firebaseJson)
-                });
+                // 🔹 Cargar desde archivo local en desarrollo
+                var jsonPath = Path.Combine(env.ContentRootPath, "Credentials", "notif_inventory8.json");
+
+                if (!File.Exists(jsonPath))
+                    throw new FileNotFoundException($"Archivo de credenciales no encontrado: {jsonPath}");
+
+                credential = GoogleCredential.FromFile(jsonPath);
             }
+            else
+            {
+                // 🔹 Leer desde variable de entorno en producción
+                var firebaseJson = Environment.GetEnvironmentVariable("FIREBASE_CONFIG");
+
+                if (string.IsNullOrWhiteSpace(firebaseJson))
+                    throw new InvalidOperationException("La variable de entorno 'FIREBASE_CONFIG' no está configurada.");
+
+                credential = GoogleCredential.FromJson(firebaseJson);
+            }
+            FirebaseApp.Create(new AppOptions
+            {
+                Credential = credential
+            });
 
             _messaging = FirebaseMessaging.DefaultInstance;
+
         }
 
         public async Task<string> EnviarNotificacionAsync(string titulo, string cuerpo, string fcmToken)

@@ -48,10 +48,6 @@ namespace inventory8.Controllers
         [HttpPost("request_token")]
         public async Task<IActionResult> RequestToken()
         {
-           // var consumerKey = "Iq8B1YKaUU88OJXoAo92ooLC4pX06c";
-            //var consumerSecret = "OF0YPVYjvfJJk6uQjUYLRbRx1U1pfG";
-           // var callbackUrl = "https://app-aa670142-e807-4859-be5b-19fad2323953.cleverapps.io/api/oauth/callback";
-
             var oauthNonce = OAuth1Helper.GenerateNonce();
             var oauthTimestamp = OAuth1Helper.GenerateTimestamp();
             var oauthVersion = "1.0";
