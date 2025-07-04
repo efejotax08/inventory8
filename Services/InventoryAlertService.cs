@@ -27,7 +27,7 @@ namespace inventory8.Services
 
             // Obtener usuarios que recibirán notificación
             var usuarios = await _context.Users
-                .Where(u => u.Settings != null && u.Settings.Contains("\"notificaciones\":"))
+                .Where(u => u.Settings != null && u.Settings.Contains("\"notifications\":"))
                 .ToListAsync();
 
             foreach (var producto in productosBajos)
