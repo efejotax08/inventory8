@@ -1,12 +1,21 @@
 using inventory8.DatabaseContext;
 using inventory8.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+/*Section: Clever Cloud oAuth*/
+// Configura autenticación
+builder.Services.AddHttpClient();
+/**/
 // Configura la variable de entorno con la ruta del archivo JSON
-var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "inventorydb-464120-836b229fa581.json");
+var credentialsPath = Path.Combine(AppContext.BaseDirectory, "Credentials", "t-gateway-464020-n0-c2f9ef363c39.json");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
 
 // Agrega servicios
@@ -49,6 +58,7 @@ app.UseSwaggerUI(c =>
 app.UseRouting();
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/", () => "Bienvenido !");
